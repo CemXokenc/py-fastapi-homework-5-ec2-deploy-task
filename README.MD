@@ -623,7 +623,7 @@ mailhog:
 
 ```yaml
 minio:
-  image: minio/minio:latest
+  image: pgsty/minio:latest
   container_name: minio-theater
   command: server --console-address ":9001" /data
   ports:
@@ -646,7 +646,7 @@ minio:
   Hosts MinIO, an object storage server compatible with Amazon S3 APIs, used for storing and retrieving files.
 
 - **Key Configurations:**
-  - **Image:** Utilizes the latest official `minio/minio` Docker image.
+  - **Image:** Utilizes the latest official `pgsty/minio` Docker image.
   - **Container Name:** Named `minio-theater`.
   - **Command:** Starts the MinIO server with the console accessible on port `9001` and data stored in `/data`.
   - **Ports:** 

@@ -2,7 +2,11 @@ from typing import List
 
 from pymongo.asynchronous.database import AsyncDatabase
 
-from schemas.user_activity import UserBaseDTO, UpdateUserActivitySchema, UserActivitySchema
+from schemas.user_activity import (
+    UserBaseDTO,
+    UpdateUserActivitySchema,
+    UserActivitySchema,
+)
 from user_activity.interfaces import UserActivityRepoInterface
 
 
@@ -31,12 +35,11 @@ class UserActivityRepository(UserActivityRepoInterface):
         await self.db["user_activity"].update_one(
             {"user_id": user_data.id},
             {"$set": {"email": user_data.email, "status": "offline"}},
-            upsert=True
+            upsert=True,
         )
 
     async def update_user_activity(
-            self,
-            user_data: UpdateUserActivitySchema
+        self, user_data: UpdateUserActivitySchema
     ) -> UserActivitySchema:
         """
         Update (or create) a user's activity record and return the resulting document.
@@ -50,11 +53,10 @@ class UserActivityRepository(UserActivityRepoInterface):
         await self.db["user_activity"].update_one(
             {"user_id": user_data.user_id},
             {"$set": user_data.model_dump(exclude_none=True)},
-            upsert=True
+            upsert=True,
         )
         result = await self.db["user_activity"].find_one(
-            {"user_id": user_data.user_id},
-            {"_id": 0}
+            {"user_id": user_data.user_id}, {"_id": 0}
         )
         return UserActivitySchema.model_validate(result)
 
@@ -65,9 +67,10 @@ class UserActivityRepository(UserActivityRepoInterface):
         Returns:
             List[UserActivitySchema]: A list of activity records for all online users.
         """
-        users = await self.db["user_activity"].find(
-            {"status": "online"},
-            {"_id": 0}
-        ).to_list()
+        users = (
+            await self.db["user_activity"]
+            .find({"status": "online"}, {"_id": 0})
+            .to_list()
+        )
 
         return [UserActivitySchema.model_validate(user) for user in users]

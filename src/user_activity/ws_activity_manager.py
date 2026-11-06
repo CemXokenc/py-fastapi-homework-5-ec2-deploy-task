@@ -12,7 +12,9 @@ class UserActivityWebSocketManager(UserActivityWebSocketManagerInterface):
         """Initialize an empty mapping of user IDs to their active WebSocket connections."""
         self.active_connections: Dict[int, List[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket, user_data: UserActivitySchema) -> None:
+    async def connect(
+        self, websocket: WebSocket, user_data: UserActivitySchema
+    ) -> None:
         """
         Register a new WebSocket connection for a user and broadcast a
         "user_connected" event if this is the user's first active connection.
@@ -35,7 +37,7 @@ class UserActivityWebSocketManager(UserActivityWebSocketManagerInterface):
                     "event": "user_connected",
                     "user": user_data.model_dump(mode="json"),
                 },
-                exclude=user_data.user_id
+                exclude=user_data.user_id,
             )
 
     async def disconnect(self, user_id: int, websocket: WebSocket) -> None:
@@ -59,10 +61,12 @@ class UserActivityWebSocketManager(UserActivityWebSocketManagerInterface):
 
         if not connections:
             self.active_connections.pop(user_id, None)
-            await self._broadcast({
-                "event": "user_disconnected",
-                "user_id": user_id,
-            })
+            await self._broadcast(
+                {
+                    "event": "user_disconnected",
+                    "user_id": user_id,
+                }
+            )
 
     async def _broadcast(self, message: dict, exclude: int = None) -> None:
         """

@@ -9,7 +9,7 @@ from exceptions import TokenExpiredError, InvalidTokenError
 from user_activity.interfaces import (
     UserActivityServiceInterface,
     UserActivityWebSocketManagerInterface,
-    UserActivityRepoInterface
+    UserActivityRepoInterface,
 )
 
 
@@ -17,10 +17,10 @@ class UserActivityService(UserActivityServiceInterface):
     """Coordinates authentication and lifecycle handling for user activity WebSocket connections."""
 
     def __init__(
-            self,
-            manager: UserActivityWebSocketManagerInterface,
-            activity_repo: UserActivityRepoInterface,
-            jwt_auth_manager: JWTAuthManagerInterface
+        self,
+        manager: UserActivityWebSocketManagerInterface,
+        activity_repo: UserActivityRepoInterface,
+        jwt_auth_manager: JWTAuthManagerInterface,
     ) -> None:
         """
         Initialize the service with its collaborating components.
@@ -52,27 +52,32 @@ class UserActivityService(UserActivityServiceInterface):
         await websocket.accept()
 
         try:
-            auth_data = await asyncio.wait_for(
-                websocket.receive_json(),
-                timeout=30.0
-            )
+            auth_data = await asyncio.wait_for(websocket.receive_json(), timeout=30.0)
         except asyncio.TimeoutError:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Auth timeout")
+            await websocket.close(
+                code=status.WS_1008_POLICY_VIOLATION, reason="Auth timeout"
+            )
             return
 
         token = auth_data.get("token")
         if not token:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token required")
+            await websocket.close(
+                code=status.WS_1008_POLICY_VIOLATION, reason="Token required"
+            )
             return
 
         try:
             user_data = self.jwt_auth_manager.decode_access_token(token)
             user_id = user_data.get("user_id")
             if not user_id:
-                await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+                await websocket.close(
+                    code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token"
+                )
                 return
         except (TokenExpiredError, InvalidTokenError):
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+            await websocket.close(
+                code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token"
+            )
             return
 
         user_data = await self.activity_repo.update_user_activity(
@@ -88,7 +93,7 @@ class UserActivityService(UserActivityServiceInterface):
         await self.activity_ws_manager.send_personal_message(
             {
                 "event": "online_users",
-                "users": [user.model_dump(mode="json") for user in online_users]
+                "users": [user.model_dump(mode="json") for user in online_users],
             },
             user_id=user_id,
         )
